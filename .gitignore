@@ -1,4 +1,6 @@
 *.jl.cov
 *.jl.*.cov
 *.jl.mem
+example-files/*
+database/*
 deps/deps.jl

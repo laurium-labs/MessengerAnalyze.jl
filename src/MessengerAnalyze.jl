@@ -5,8 +5,7 @@ module MessengerAnalyze
 
   abstract type Database end
 
-
- module Utils
+  module Utils
     map(filter(fileName->endswith(fileName,".jl"),readdir(string(@__DIR__)*"/utils"))) do fileName
         include((@__DIR__)*"/utils/"*fileName)
     end
@@ -16,10 +15,11 @@ module MessengerAnalyze
     JSON.parse(readstring(config))
   end
 
-  function analyzeFile(config)
-    config=parseConfig(config)
-
-    # MessengerAnalyze.Utils.ParseFB.extractFile(config["path-FB-file"])
+  function analyzeFile(configPath)
+    config=parseConfig(configPath)
+    database=MessengerAnalyze.Utils.DatabaseHandling.Database(config)
+    MessengerAnalyze.Utils.DatabaseHandling.setUp(database)
+    MessengerAnalyze.Utils.ParseFB.extractFile(database,config["path-FB-file"])
   end
 
 end

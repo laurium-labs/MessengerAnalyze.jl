@@ -3,15 +3,15 @@ module DatabaseHandling
 
   using SQLite
 
-  type Database<:MessengerAnalyze.Database
-    db::Nullable{SQLite.DB}
+  mutable struct Database<:MessengerAnalyze.Database
+    db::SQLite.DB
     dbName::String
     function Database(name::String)
-      new(Nullable{SQLite.DB}(),name)
+      new(SQLite.DB(),name)
     end
   end
   abstract type AbstractEntry end
-  type Message<:AbstractEntry
+  mutable struct Message<:AbstractEntry
     id::Int64
     senderName::String
     sendeeName::String
@@ -32,7 +32,7 @@ module DatabaseHandling
       id Integer primary key,
       senderName String,
       sendeeName String,
-      timeMessage Integer,
+      timeMessage Real,
       messageText String,
       multiMedia Integer
       )
