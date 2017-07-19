@@ -15,7 +15,7 @@ module DatabaseHandling
     id::Int64
     senderName::String
     sendeeName::String
-    timeMessage::Integer
+    timeMessage::Real
     messageText::String
     multiMedia::Integer
   end
@@ -61,7 +61,7 @@ module DatabaseHandling
     end
   end
 
-  function getSQLiteSource{entryType<:AbstractEntry}(database::Database,::Type{entryType})
+  function getSQLiteSource(database::Database,::Type{entryType}) where entryType<:AbstractEntry
     tableName=tableNameFromType(entryType)
     SQLite.Source(database.db, "SELECT * FROM $(tableName)")
   end

@@ -6,6 +6,9 @@ module ParseFB
   function getMembers(thread::Gumbo.HTMLNode)
     split(split(thread[1].text,"<")[1],", ")
   end
+  """
+  Big hack, should be fixed in Base. Considering this project.
+  """
   function processAmPm(timeZoneRemoved::AbstractString,dateNo12Hour::DateTime)
     if contains(timeZoneRemoved,"am")
       if Dates.Hour(dateNo12Hour)==12
@@ -48,7 +51,6 @@ module ParseFB
     messages=matchall(sel"li, p",thread)
     pairedMetaMessages=map(idx->(messageMetaData[idx],messages[idx]), 1:length(messages))
     foreach(pairedMetaMessages) do pairMetaMessage 
-      
       extractMessage(members,pairMetaMessage,database)
     end
   end

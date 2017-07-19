@@ -2,12 +2,18 @@ module MessengerAnalyze
   import JSON
   using DataFrames
   function extractFile end
+  function producePlot end
 
   abstract type Database end
 
   module Utils
     map(filter(fileName->endswith(fileName,".jl"),readdir(string(@__DIR__)*"/utils"))) do fileName
         include((@__DIR__)*"/utils/"*fileName)
+    end
+  end
+  module Analysis
+    map(filter(fileName->endswith(fileName,".jl"),readdir(string(@__DIR__)*"/analysis"))) do fileName
+        include((@__DIR__)*"/analysis/"*fileName)
     end
   end
 
