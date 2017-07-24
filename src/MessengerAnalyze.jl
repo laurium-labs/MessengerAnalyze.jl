@@ -1,10 +1,11 @@
 module MessengerAnalyze
   import JSON
   using DataFrames
+  using MessengerAnalyzeTypes
   function extractFile end
   function producePlot end
 
-  abstract type Database end
+
 
   module Utils
     map(filter(fileName->endswith(fileName,".jl"),readdir(string(@__DIR__)*"/utils"))) do fileName
@@ -17,15 +18,12 @@ module MessengerAnalyze
     end
   end
 
-  function parseConfig(config)
-    JSON.parse(readstring(config))
+  function extractFile(pathToFile::AbstractString)
+    MessengerAnalyze.Utils.ParseFB.extractFile(pathToFile)
   end
 
-  function analyzeFile(configPath)
-    config=parseConfig(configPath)
-    database=MessengerAnalyze.Utils.DatabaseHandling.Database(config)
-    MessengerAnalyze.Utils.DatabaseHandling.setUp(database)
-    MessengerAnalyze.Utils.ParseFB.extractFile(database,config["path-FB-file"])
+  function comparePeople(df::DataFrame,user1::AbstractString,user2::AbstractString,startDate::DateTime,endDate::DateTime)
+    MessengerAnalyze.Analysis.DateAnalysis.producePlotMonthly(database,user1,user2,startDate,endDate)
   end
 
 end
