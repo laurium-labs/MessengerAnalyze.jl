@@ -23,7 +23,7 @@ module MessengerAnalyze
   end
 
   function comparePeople(df::DataFrame,user1::AbstractString,user2::AbstractString,startDate::DateTime,endDate::DateTime)
-    MessengerAnalyze.Analysis.DateAnalysis.producePlotMonthly(database,user1,user2,startDate,endDate)
+    MessengerAnalyze.Analysis.DateAnalysis.producePlotMonthly(df,user1,user2,startDate,endDate)
   end
 
 end

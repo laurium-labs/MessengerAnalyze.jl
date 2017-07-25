@@ -4,7 +4,7 @@ module DateAnalysis
     using DataFrames
     using Plots
     using MessengerAnalyzeTypes
-
+    plotlyjs()
     struct DateRangeAnalysis
         names::Tuple{AbstractString,AbstractString}
         beginAnalysis::DateTime
@@ -20,17 +20,16 @@ module DateAnalysis
     function monthYearsBetween(monthYearBegin::DateTime,monthYearEnd::DateTime)
         monthRange=Vector{DateTime}()
         currentMonth=monthYearBegin
-        while currentMonth<monthYearEnd
+        while currentMonth<=monthYearEnd
             push!(monthRange,currentMonth)
             currentMonth+=Dates.Month(1)
         end
         monthRange
     end
     function countMessagesInMonth(date::DateTime,names::Tuple{AbstractString,AbstractString},df::DataFrame)
-        beginTime=Dates.datetime2unix(date)
-        endTime = Dates.datetime2unix(date+Dates.Month(1))
+        endTime =date+Dates.Month(1)
         MessagesInMonth =  @from message in df begin
-                    @where beginTime<=message.date<endTime #&& (message.senderName ==(names[1]|names[2]) && message.sendeeName ==(names[1]|names[2])  )
+                    @where date<=get(message.date)<endTime #&& (message.senderName ==(names[1]|names[2]) && message.sendeeName ==(names[1]|names[2])  )
                     @select {message.date}
                     @collect DataFrame
         end
@@ -44,7 +43,7 @@ module DateAnalysis
         labels=map(monthYearRange) do date
            Dates.monthabbr(date)*" "*string(Int64(Dates.year(date)))
         end
-        plotlyjs()
+        
         plot(counts,xticks= (1:length(counts),labels),title="Monthly data",legend=false,yaxis="messages")
 
     end
