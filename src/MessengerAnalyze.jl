@@ -4,7 +4,9 @@ module MessengerAnalyze
   using MessengerAnalyzeTypes
   function extractFile end
   function producePlot end
-
+  abstract type PlotType end
+  type Total<:PlotType end
+  type DailyAverage<:PlotType end
 
 
   module Utils
@@ -27,8 +29,9 @@ module MessengerAnalyze
                         user2::AbstractString,
                         startDate::DateTime,
                         endDate::DateTime,
-                        timeBucket::Type{dateType}) where dateType<:Dates.DatePeriod
-    MessengerAnalyze.Analysis.DateAnalysis.producePlot(df,user1,user2,startDate,endDate,timeBucket)
+                        timeBucket::Type{dateType}, 
+                        quantityDisplayed::Type{plotType}) where {dateType<:Dates.DatePeriod, plotType<:PlotType}
+    MessengerAnalyze.Analysis.DateAnalysis.producePlot(df,user1,user2,startDate,endDate,timeBucket,quantityDisplayed)
   end
 
 end

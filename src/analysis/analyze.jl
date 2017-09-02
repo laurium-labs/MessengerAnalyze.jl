@@ -69,17 +69,21 @@ module DateAnalysis
         end
         dateRange
     end
+    function messageBetweenPeopleOfInterest(names::Tuple{AbstractString,AbstractString},senderName,sendeeName)
+        (senderName ==names[1]|| senderName == names[2]) && (sendeeName==names[1] ||sendeeName ==names[2])
+    end
     function countInDateBucket(date::DateTime,
                                 names::Tuple{AbstractString,AbstractString},
                                 df::DataFrame,
-                                timeGradation::Type{dateType}) where dateType<:Dates.DatePeriod
+                                timeGradation::Type{dateType},
+                                quantityDisplayed::Type{plotType}) where {dateType<:Dates.DatePeriod,plotType<:MessengerAnalyze.PlotType}
         dateEnd=date+timeGradation(1)
         MessagesInDate = @from message in df begin
-                    @where date<=get(message.date)<dateEnd (message.senderName ==(names[1]|names[2]) && message.sendeeName ==(names[1]|names[2])  )
+                    @where date<=get(message.date)<dateEnd && messageBetweenPeopleOfInterest(names,get(message.senderName),get(message.sendeeName))
                     @select {message.date}
                     @collect DataFrame
         end
-        return nrow(MessagesInDate)
+        return nrow(MessagesInDate)/(quantityDisplayed==MessengerAnalyze.Total? 1: Dates.days(dateEnd-date))
     end
 
 
@@ -89,29 +93,31 @@ module DateAnalysis
         timeGradation==Dates.Week && return "Weekly"
         timeGradation==Dates.Day && return "Daily"
     end
-    function titleTotal(user1::AbstractString,user2::AbstractString,timeGradation::Type{dateType}) where dateType<:Dates.DatePeriod
-        "Total "*timeGroupingString(timeGradation)*" messages between "*user1* " and "*user2
+    function titlePlot(user1::AbstractString,
+                        user2::AbstractString,
+                        timeGradation::Type{dateType},
+                        quantityDisplayed::Type{plotType}) where {dateType<:Dates.DatePeriod, plotType<:MessengerAnalyze.PlotType}
+        (quantityDisplayed==MessengerAnalyze.Total?"Total ":"Average daily aggregated ")*
+        timeGroupingString(timeGradation)*" messages between \n "*user1* " and "*user2
     end 
-    function producePlotTotal(df::DataFrame, 
+    function producePlot(df::DataFrame, 
                         user1::AbstractString,
                         user2::AbstractString,
                         startDate::DateTime,
                         endDate::DateTime,
-                        timeGradation::Type{dateType}) where dateType<:Dates.DatePeriod
+                        timeGradation::Type{dateType},
+                        quantityDisplayed::Type{plotType}) where {dateType<:Dates.DatePeriod, plotType<:MessengerAnalyze.PlotType}
         beginningTime=getRoundedTime(startDate,timeGradation)
         endTime = getRoundedTime(endDate,timeGradation)
         timeRange = getRangeOfDates(beginningTime,endTime,timeGradation)
-        messagesInDateStep= map(date->countInDateBucket(date,(user1,user2),df,timeGradation),timeRange)
-        lineplot(timeRange,messagesInDateStep,titleTotal(user1,user2,timeGradation))
+        messagesInDateStep= map(date->countInDateBucket(date,(user1,user2),df,timeGradation,quantityDisplayed),timeRange)
+        lineplot(timeRange,messagesInDateStep,titlePlot(user1,user2,timeGradation,quantityDisplayed))
         
     end
-    function lineplot(dates::Vector{DateTime},messagesInDateStep::Vector{Int},titlePlot)
-
-
+    function lineplot(dates::Vector{DateTime},messagesInDateStep::Vector{real},titlePlot) where real<:Real
         df = DataFrame()
         df[:Dates]=dates
-        df[:messageCount]=messagesInDateStep
-        
+        df[:messageCount]=messagesInDateStep  
         plot(x=df[:Dates],y=df[:messageCount],Guide.title(titlePlot),Guide.xlabel(""),Guide.ylabel("messages"))
         
     end
