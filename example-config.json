@@ -1,6 +1,8 @@
 {
   "database-name":"facebook-messages.db",
+  "extractions"
   "path-FB-file":"example-files/BrentHalonen",
+
   "user-name-1":"Brent Halonen",
   "user-name-2":"Chloe Haataja",
   "begin-date":"2015-10-01",
