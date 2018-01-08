@@ -98,7 +98,7 @@ module DateAnalysis
                         timeGradation::Type{dateType},
                         quantityDisplayed::Type{plotType}) where {dateType<:Dates.DatePeriod, plotType<:MessengerAnalyze.PlotType}
         (quantityDisplayed==MessengerAnalyze.Total?"Total ":"Average daily aggregated ")*
-        timeGroupingString(timeGradation)*" messages between \n "*user1* " and "*user2
+        timeGroupingString(timeGradation)*" messages between \n $user1 and $user2"
     end 
     function producePlot(df::DataFrame, 
                         user1::AbstractString,

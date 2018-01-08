@@ -20,8 +20,8 @@ module MessengerAnalyze
     end
   end
 
-  function extractFile(pathToFile::AbstractString)
-    MessengerAnalyze.Utils.ParseFB.extractFile(pathToFile)
+  function extractFolder(pathToFile::AbstractString)
+    MessengerAnalyze.Utils.ParseFB.extractFolder(pathToFile)
   end
 
   function comparePeople(df::DataFrame,

@@ -2,100 +2,99 @@ module ParseFB
   import MessengerAnalyze
   import MessengerAnalyzeTypes
   #  using Calendar
-   using Gumbo, Cascadia, Query,DataFrames
-  function getMembers(thread::Gumbo.HTMLNode)
-    split(split(thread[1].text,"<")[1],", ")
-  end
-  """
-  Big hack, should be fixed in Base. Considering this project.
-  """
-  function processAmPm(timeZoneRemoved::AbstractString,dateNo12Hour::DateTime)
-    if contains(timeZoneRemoved,"am")
-      if Dates.Hour(dateNo12Hour)==12
-        return dateNo12Hour-Dates.Hour(12)
-      else
-        return dateNo12Hour
-      end
-    else
-      if Dates.Hour(dateNo12Hour)==12
-        return dateNo12Hour
-      else
-        return dateNo12Hour+Dates.Hour(12)
-      end
-    end
-  end
-  function removeTimezone12Hour(originalString::AbstractString)
-    return originalString[1:end-6]
-  end
-  function getTime(timeStringFB::AbstractString)
-
-   dateNo12Hour= DateTime(removeTimezone12Hour(timeStringFB),"E, U d, y at HH:MM")
-    processAmPm(timeStringFB,dateNo12Hour)
-  end
-  function getTextAndMulti(message::Gumbo.HTMLNode)
-    length(children(message))==0&& return ("",true)
-    return (message[1].text,false)
-  end
-  function extractMessage(members::Vector{stringType},message::Tuple{Gumbo.HTMLNode,Gumbo.HTMLNode},df::DataFrame) where stringType<:AbstractString
-    textMessage,multiMedia=getTextAndMulti(message[2])
-    messageSender=matchall(sel".user",message[1])[1][1].text
-    messageTime=getTime(matchall(sel".meta",message[1])[1][1].text)
-    messageSendee = setdiff(members,[messageSender])[1]
-    messageEntered=MessengerAnalyzeTypes.Message(messageSender,
-                                            messageSendee,
-                                            Dates.Year(messageTime),
-                                            Dates.Month(messageTime),
-                                            Dates.Day(messageTime),
-                                            Dates.dayofweek(messageTime),
-                                            Dates.Hour(messageTime),
-                                            Dates.Minute(messageTime),
-                                            messageTime,
-                                            textMessage,
-                                            Int64(multiMedia))
-    push!(df,arrayFromType(messageEntered))
-  end
-  function arrayFromType(entry::MessengerAnalyzeTypes.AbstractEntry) 
-    map(fieldname->getfield(entry,fieldname),fieldnames(entry))
-  end
-  function extractThread(thread::Gumbo.HTMLNode,df::DataFrame)
-    members = getMembers(thread)
-    length(members)==2 || (println("only processing 2 person conversations"); return)
-    messageMetaData=matchall(sel".message",thread)
-    messages=matchall(sel"li, p",thread)
-    pairedMetaMessages=map(idx->(messageMetaData[idx],messages[idx]), 1:length(messages))
-    foreach(pairedMetaMessages) do pairMetaMessage 
-      extractMessage(members,pairMetaMessage,df)
-    end
-  end
-  function fieldtypes(entryType::DataType)
-    map(fieldname->fieldtype(entryType,fieldname),fieldnames(entryType))
-  end
-  function dataFrameFromType(::Type{entryType}) where entryType<:MessengerAnalyzeTypes.AbstractEntry
-      DataFrame(fieldtypes(entryType),fieldnames(entryType),0)
-  end
-  function getUserName(messages::Gumbo.HTMLDocument)
-    userNameNode=matchall(sel"h1",messages.root)
-    children(userNameNode[1])[1].text
-  end
-  function getMessagingPartners(df::DataFrame,userName::String)
-    messagePartner = @from message in df begin
-                    @let partner = (message.sendeeName == userName? message.senderName : message.sendeeName)
-                    @group message by partner into g
-                    @select {Name=g.key,Count=length(g)}
-                    @collect DataFrame
-      end
-      return messagePartner
-  end
-  function extractFile(pathToFolder::String)
-    messages=parsehtml(readstring(pathToFolder*"/messages.htm"))
-    selectThreads=sel".thread"
-    threads=matchall(selectThreads,messages.root)
-    userName=getUserName(messages)
-    dataFrame=dataFrameFromType(MessengerAnalyzeTypes.Message)
-    foreach(threads) do thread
-      extractThread(thread,dataFrame)
-    end
-    messagingPartners=getMessagingPartners(dataFrame,userName)
-    return MessengerAnalyzeTypes.UserQuery(userName,messagingPartners,dataFrame)
-  end
+   using EzXML, Query,DataFrames
+   """
+   Big hack, should be fixed in Base. Considering this project.
+   """
+   function processAmPm(timeZoneRemoved::AbstractString,dateNo12Hour::DateTime)
+       if contains(timeZoneRemoved,"am")
+         if Dates.Hour(dateNo12Hour)==12
+           return dateNo12Hour-Dates.Hour(12)
+         else
+           return dateNo12Hour
+         end
+       else
+         if Dates.Hour(dateNo12Hour)==12
+           return dateNo12Hour
+         else
+           return dateNo12Hour+Dates.Hour(12)
+         end
+       end
+   end
+   function removeTimezone12Hour(originalString::AbstractString)
+       return originalString[1:end-6]
+   end
+   function getTime(timeStringFB::AbstractString)
+       dateNo12Hour= DateTime(removeTimezone12Hour(timeStringFB),"E, U d, y at HH:MM")
+       processAmPm(timeStringFB,dateNo12Hour)
+   end
+   function getUserName(messages)
+       node=find(messages,"//title")
+       split(nodecontent(node[1]),"-")[1]|>strip
+   end
+   function membersOfConversation(conversation)
+       titleInfo=find(conversation|>root,"//title")
+       length(titleInfo)==0 && return 0
+       map(strip,split(split(titleInfo[1]|>nodecontent,"Conversation with")[2],","))
+   end
+   function getTextAndMulti(message)
+       message==""&& return ("",true)
+       return (message,false)
+   end
+   function arrayFromType(entry::MessengerAnalyzeTypes.AbstractEntry) 
+       map(fieldname->getfield(entry,fieldname),fieldnames(entry))
+   end
+   function logMessage(date::AbstractString,sender::AbstractString,sendee::AbstractString,message::AbstractString,messageLog::DataFrame)
+       date_parsed=getTime(date)
+       textMessage,multiMedia=getTextAndMulti(message)
+       messageEntered=MessengerAnalyzeTypes.Message(sender,
+                                           sendee,
+                                           Dates.Year(date_parsed),
+                                           Dates.Month(date_parsed),
+                                           Dates.Day(date_parsed),
+                                           Dates.dayofweek(date_parsed),
+                                           Dates.Hour(date_parsed),
+                                           Dates.Minute(date_parsed),
+                                           date_parsed,
+                                           textMessage,
+                                           Int64(multiMedia))
+       push!(messageLog,arrayFromType(messageEntered))
+   end    
+   function extractConversation(pathToFile::AbstractString,messageLog::DataFrame,analyzedUser::AbstractString)
+       conversation=readhtml(pathToFile)
+       members=membersOfConversation(conversation)
+       members==0&&return
+       senders=map(nodecontent,filter(elem->(haskey(elem,"class")&&elem["class"]=="user"),find(conversation|>root,"//span")))
+       messages=map(nodecontent,find(conversation|>root,"//p"))
+       dates=map(nodecontent,filter(elem->(haskey(elem,"class")&&elem["class"]=="meta"),find(conversation|>root,"//span")))
+   
+       messageDescriptions=map(zip(senders,messages,dates)) do messageDescription
+           @NT(sender=messageDescription[1], message=messageDescription[2], date=messageDescription[3])
+       end
+       foreach(messageDescriptions) do messageDescription
+           if messageDescription.sender == analyzedUser
+               foreach(members) do member
+                   logMessage(messageDescription.date,messageDescription.sender,member,messageDescription.message,messageLog)
+               end
+           else
+               logMessage(messageDescription.date,messageDescription.sender,analyzedUser,messageDescription.message,messageLog)
+           end
+       end
+   end
+     function fieldtypes(entryType::DataType)
+       map(fieldname->fieldtype(entryType,fieldname),fieldnames(entryType))
+     end
+     function dataFrameFromType(::Type{entryType}) where entryType<:MessengerAnalyzeTypes.AbstractEntry
+         DataFrame(fieldtypes(entryType),fieldnames(entryType),0)
+     end
+   function extractFolder(pathToFolder::String)
+       messageLog=dataFrameFromType(MessengerAnalyzeTypes.Message)
+       messages=readhtml(joinpath(pathToFolder,"html/messages.htm"))
+       analyzedUser=getUserName(messages)
+       referencesToConversations=map(node->node["href"],find(messages,"//a"))[11:end]
+       foreach(referencesToConversations) do file
+         extractConversation(joinpath(pathToFolder,file),messageLog,analyzedUser)
+       end
+       return messageLog
+   end
 end
