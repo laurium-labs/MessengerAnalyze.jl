@@ -118,7 +118,40 @@ module DateAnalysis
         df = DataFrame()
         df[:Dates]=dates
         df[:messageCount]=messagesInDateStep  
-        plot(x=df[:Dates],y=df[:messageCount],Guide.title(titlePlot),Guide.xlabel(""),Guide.ylabel("messages"))
-        
+        data_plot=plot(x=df[:Dates],y=df[:messageCount],Guide.title(titlePlot),Guide.xlabel(""),Guide.ylabel("messages"))
+        draw(SVG(titlePlot*".svg",8inch,8inch),data_plot)
+    end
+    function dateToString(date::DateTime)
+        string(Dates.monthabbr(Dates.Month(date).value))*"-"*string(Dates.Day(date).value)*"-"string(Dates.Year(date).value)
+    end
+    function hourlyPlotTitle(user1::AbstractString,user2::AbstractString,startDate,endDate)
+        "Hourly messaging between "*user1*" and "*user2*"\n from "*dateToString(startDate)*" to "*dateToString(endDate)
+    end
+    function hourlyMessagingData(df::DataFrame,user1,user2,startDate,endDate)
+        hourData=zeros(Int64,24)
+        MessagesInDateWindow=@from message in df begin
+                            @where startDate<=get(message.date)<endDate && messageBetweenPeopleOfInterest((user1,user2),get(message.senderName),get(message.sendeeName))
+                            @select {hour=message.hour}
+                            @collect DataFrame
+                            end
+        foreach(eachrow(MessagesInDateWindow)) do message
+            hourData[message[:hour].value+1]+=1
+        end
+        return hourData
+    end
+    function hourlyPlot(df::DataFrame,
+                        user1::AbstractString,
+                        user2::AbstractString,
+                        startDate::DateTime,
+                        endDate::DateTime
+                     )
+            titlePlot=hourlyPlotTitle(user1,user2,startDate,endDate)
+            hourly_messaging=hourlyMessagingData(df,user1,user2,startDate,endDate)
+            hour_labels=map(1:24) do hour 
+                hour<=12? string(hour)*":00 AM":string(hour-12)*":00 PM"
+            end
+            println(hour_labels)
+            hourly_plot=plot(x=hour_labels,y=hourly_messaging,Geom.point,Guide.title(titlePlot),Guide.ylabel("Total message count"))
+            draw(SVG(mapreduce(string,(l,r)->l*r,"",split(titlePlot,"\n"))*".svg",6inch,6inch),hourly_plot)
     end
 end
