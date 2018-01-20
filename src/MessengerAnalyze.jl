@@ -1,7 +1,5 @@
 module MessengerAnalyze
-  import JSON
   using DataFrames
-  using MessengerAnalyzeTypes
   function extractFile end
   function producePlot end
   abstract type PlotType end

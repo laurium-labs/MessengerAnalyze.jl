@@ -1,6 +1,4 @@
-module MessengerAnalyzeTypes
-    using DataFrames
-    abstract type AbstractEntry end
+
   
     mutable struct UserQuery
         userName::AbstractString
@@ -8,7 +6,7 @@ module MessengerAnalyzeTypes
         dataFrameOfMessages::DataFrame
     end
 
-    mutable struct Message<:AbstractEntry
+    mutable struct Message
         senderName::String
         sendeeName::String
         year::Dates.Year
@@ -21,5 +19,3 @@ module MessengerAnalyzeTypes
         messageText::String
         multiMedia::Integer
     end
-
-end

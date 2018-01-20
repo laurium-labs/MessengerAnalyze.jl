@@ -1,6 +1,5 @@
 module ParseFB
   import MessengerAnalyze
-  import MessengerAnalyzeTypes
   #  using Calendar
    using EzXML, Query,DataFrames
    """
@@ -41,13 +40,13 @@ module ParseFB
        message==""&& return ("",true)
        return (message,false)
    end
-   function arrayFromType(entry::MessengerAnalyzeTypes.AbstractEntry) 
+   function arrayFromType(entry::MessengerAnalyze.Message) 
        map(fieldname->getfield(entry,fieldname),fieldnames(entry))
    end
    function logMessage(date::AbstractString,sender::AbstractString,sendee::AbstractString,message::AbstractString,messageLog::DataFrame)
        date_parsed=getTime(date)
        textMessage,multiMedia=getTextAndMulti(message)
-       messageEntered=MessengerAnalyzeTypes.Message(sender,
+       messageEntered=MessengerAnalyze.Message(sender,
                                            sendee,
                                            Dates.Year(date_parsed),
                                            Dates.Month(date_parsed),
@@ -84,11 +83,11 @@ module ParseFB
      function fieldtypes(entryType::DataType)
        map(fieldname->fieldtype(entryType,fieldname),fieldnames(entryType))
      end
-     function dataFrameFromType(::Type{entryType}) where entryType<:MessengerAnalyzeTypes.AbstractEntry
+     function dataFrameFromType(::Type{entryType}) where entryType<:MessengerAnalyze.Message
          DataFrame(fieldtypes(entryType),fieldnames(entryType),0)
      end
    function extractFolder(pathToFolder::String)
-       messageLog=dataFrameFromType(MessengerAnalyzeTypes.Message)
+       messageLog=dataFrameFromType(MessengerAnalyze.Message)
        messages=readhtml(joinpath(pathToFolder,"html/messages.htm"))
        analyzedUser=getUserName(messages)
        referencesToConversations=map(node->node["href"],find(messages,"//a"))[11:end]

@@ -3,7 +3,6 @@ module DateAnalysis
     using Query
     using DataFrames
     using Gadfly
-    using MessengerAnalyzeTypes
     struct DateRangeAnalysis
         names::Tuple{AbstractString,AbstractString}
         beginAnalysis::DateTime
