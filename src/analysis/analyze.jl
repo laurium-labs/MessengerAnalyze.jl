@@ -92,7 +92,7 @@ module DateAnalysis
         timeGradation==Dates.Week && return "Weekly"
         timeGradation==Dates.Day && return "Daily"
     end
-    function titlePlot(user1::AbstractString,
+    function titleDailyPlot(user1::AbstractString,
                         user2::AbstractString,
                         timeGradation::Type{dateType},
                         quantityDisplayed::Type{plotType}) where {dateType<:Dates.DatePeriod, plotType<:MessengerAnalyze.PlotType}
@@ -105,20 +105,20 @@ module DateAnalysis
                         startDate::DateTime,
                         endDate::DateTime,
                         timeGradation::Type{dateType},
-                        quantityDisplayed::Type{plotType}) where {dateType<:Dates.DatePeriod, plotType<:MessengerAnalyze.PlotType}
+                        quantityDisplayed::Type{plotType},pathToSavePlot::AbstractString) where {dateType<:Dates.DatePeriod, plotType<:MessengerAnalyze.PlotType}
         beginningTime=getRoundedTime(startDate,timeGradation)
         endTime = getRoundedTime(endDate,timeGradation)
         timeRange = getRangeOfDates(beginningTime,endTime,timeGradation)
         messagesInDateStep= map(date->countInDateBucket(date,(user1,user2),df,timeGradation,quantityDisplayed),timeRange)
-        lineplot(timeRange,messagesInDateStep,titlePlot(user1,user2,timeGradation,quantityDisplayed))
-        
+        titlePlot=titleDailyPlot(user1,user2,timeGradation,quantityDisplayed)
+        lineplot(timeRange,messagesInDateStep,titlePlot,pathToSavePlot)
     end
-    function lineplot(dates::Vector{DateTime},messagesInDateStep::Vector{real},titlePlot) where real<:Real
+    function lineplot(dates::Vector{DateTime},messagesInDateStep::Vector{real},titlePlot,pathToSavePlot) where real<:Real
         df = DataFrame()
         df[:Dates]=dates
         df[:messageCount]=messagesInDateStep  
         data_plot=plot(x=df[:Dates],y=df[:messageCount],Guide.title(titlePlot),Guide.xlabel(""),Guide.ylabel("messages"))
-        draw(SVG(titlePlot*".svg",8inch,8inch),data_plot)
+        draw(SVG(joinpath(pathToSavePlot,mapreduce(string,(l,r)->l*r,"",split(titlePlot,"\n"))*".svg"),6inch,6inch),data_plot)
     end
     function dateToString(date::DateTime)
         string(Dates.monthabbr(Dates.Month(date).value))*"-"*string(Dates.Day(date).value)*"-"string(Dates.Year(date).value)
@@ -126,31 +126,71 @@ module DateAnalysis
     function hourlyPlotTitle(user1::AbstractString,user2::AbstractString,startDate,endDate)
         "Hourly messaging between "*user1*" and "*user2*"\n from "*dateToString(startDate)*" to "*dateToString(endDate)
     end
+    function messagesOfInterest(df::DataFrame,user1,user2,startDate,endDate)
+        MessagesInDateWindow=@from message in df begin
+            @where startDate<=get(message.date)<endDate && messageBetweenPeopleOfInterest((user1,user2),get(message.senderName),get(message.sendeeName))
+            @select {hour=get(message.hour).value, dayOfWeek=message.dayOfWeek}
+            @collect DataFrame
+            end
+        return MessagesInDateWindow
+    end
     function hourlyMessagingData(df::DataFrame,user1,user2,startDate,endDate)
         hourData=zeros(Int64,24)
-        MessagesInDateWindow=@from message in df begin
-                            @where startDate<=get(message.date)<endDate && messageBetweenPeopleOfInterest((user1,user2),get(message.senderName),get(message.sendeeName))
-                            @select {hour=message.hour}
-                            @collect DataFrame
-                            end
+        MessagesInDateWindow=messagesOfInterest(df,user1,user2,startDate,endDate)
         foreach(eachrow(MessagesInDateWindow)) do message
             hourData[message[:hour].value+1]+=1
         end
         return hourData
     end
+    function hour_labels()
+        map(1:24) do hour 
+            hour_label(hour)
+        end
+    end
+    function hour_label(hour)
+        return hour<=12? string(hour)*":00 AM":string(hour-12)*":00 PM"
+    end
+    function day_labels()
+        map(1:7) do day
+            Dates.dayabbr(day)
+        end
+    end
     function hourlyPlot(df::DataFrame,
                         user1::AbstractString,
                         user2::AbstractString,
                         startDate::DateTime,
-                        endDate::DateTime
+                        endDate::DateTime,
+                        pathToSavePlot::AbstractString
                      )
             titlePlot=hourlyPlotTitle(user1,user2,startDate,endDate)
             hourly_messaging=hourlyMessagingData(df,user1,user2,startDate,endDate)
-            hour_labels=map(1:24) do hour 
-                hour<=12? string(hour)*":00 AM":string(hour-12)*":00 PM"
-            end
-            println(hour_labels)
-            hourly_plot=plot(x=hour_labels,y=hourly_messaging,Geom.point,Guide.title(titlePlot),Guide.ylabel("Total message count"))
-            draw(SVG(mapreduce(string,(l,r)->l*r,"",split(titlePlot,"\n"))*".svg",6inch,6inch),hourly_plot)
+
+            hourly_plot=plot(x=hour_labels(),y=hourly_messaging,Geom.point,Guide.title(titlePlot),Guide.ylabel("Total message count"))
+            draw(SVG(joinpath(pathToSavePlot,mapreduce(string,(l,r)->l*r,"",split(titlePlot,"\n"))*".svg"),6inch,6inch),hourly_plot)
+    end
+    function hourlyVsWeekPlotTitle(user1::AbstractString,user2::AbstractString,startDate,endDate)
+        "Week-hour messaging heat map between "*user1*" and "*user2*"\n from "*dateToString(startDate)*" to "*dateToString(endDate)
+    end
+    function hoursVsWeekPlot(df::DataFrame,
+        user1::AbstractString,
+        user2::AbstractString,
+        startDate::DateTime,
+        endDate::DateTime,
+        pathToSavePlot::AbstractString)
+        titlePlot=hourlyVsWeekPlotTitle(user1,user2,startDate,endDate)
+        selectedMessages=messagesOfInterest(df,user1,user2,startDate,endDate)
+        selectedMessages[:DayOfWeek]=map(dayNumber->Dates.dayabbr(dayNumber),selectedMessages[:dayOfWeek])
+        selectedMessages[:HourOfDay]=map(hourNumber->hour_label(hourNumber),selectedMessages[:hour])
+        # setlevels!(selectedMessages[:DayOfWeek],map(dayNumber->Dates.dayabbr(dayNumber),1:7))
+        hour_week_plot=plot(selectedMessages, x="hour", y="dayOfWeek",
+                            Guide.xticks(ticks=collect(1:24)),
+                            Scale.x_continuous(labels=x->hour_label(x)),
+                            Guide.yticks(ticks=collect(1:7)),
+                            Scale.y_continuous(labels=x->Dates.dayabbr(x)),
+                            Guide.ylabel("Day of the week"),
+                            Guide.xlabel("Hour"), 
+                            Geom.histogram2d, 
+                            Guide.title(titlePlot))
+        draw(SVG(joinpath(pathToSavePlot,mapreduce(string,(l,r)->l*r,"",split(titlePlot,"\n"))*".svg"),6inch,6inch),hour_week_plot)
     end
 end
