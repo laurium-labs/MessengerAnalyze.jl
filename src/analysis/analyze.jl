@@ -1,5 +1,6 @@
 module DateAnalysis
     import MessengerAnalyze 
+    import MessengerAnalyze.Utils.DateOperations
     using Query
     using DataFrames
     using Gadfly
@@ -59,15 +60,7 @@ module DateAnalysis
     function getRoundedTime(date::DateTime,timeGradation::Type{Dates.Hour})
         return DateTime(Dates.Year(date),Dates.Month(date),Dates.Week(date), Dates.Day(date), Dates.Hour(date)) 
     end
-    function getRangeOfDates(beginningTime::DateTime,endTime::DateTime,timeGradation::Type{dateType}) where dateType<:Dates.DatePeriod
-        dateRange=Vector{DateTime}()
-        currentDate=beginningTime
-        while currentDate<=endTime
-            push!(dateRange,currentDate)
-            currentDate+=timeGradation(1)
-        end
-        dateRange
-    end
+
     function messageBetweenPeopleOfInterest(names::Tuple{AbstractString,AbstractString},senderName,sendeeName)
         (senderName ==names[1]|| senderName == names[2]) && (sendeeName==names[1] ||sendeeName ==names[2])
     end
