@@ -48,5 +48,13 @@ module MessengerAnalyze
                             pathToSavePlot::AbstractString)
     MessengerAnalyze.Analysis.DateAnalysis.hoursVsWeekPlot(df,user1,user2,startDate,endDate,pathToSavePlot)
   end
+  function lsaMessenger(df::DataFrame,
+                        user1::AbstractString,
+                        user2::AbstractString,
+                        startDate::DateTime,
+                        endDate::DateTime,
+                        timeBucket::Type{dateType}) where dateType<:Dates.DatePeriod
+    MessengerAnalyze.Analysis.MessengerTextAnalysis.lsaMessenger(df,user1,user2,startDate,endDate,timeBucket)
+  end
 
 end
