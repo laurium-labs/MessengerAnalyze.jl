@@ -8,12 +8,12 @@ module MessengerAnalyze
   include((@__DIR__)*"/MessengerAnalyzeTypes.jl")
   export Total, DailyAverage, extractFolder,dailyMessagingPlot, hourlyMessagingPlot, hoursVsWeekPlot
   module Utils
-    map(filter(fileName->endswith(fileName,".jl"),readdir(string(@__DIR__)*"/utils"))) do fileName
+    foreach(filter(fileName->endswith(fileName,".jl"),readdir(string(@__DIR__)*"/utils"))) do fileName
         include((@__DIR__)*"/utils/"*fileName)
     end
   end
   module Analysis
-    map(filter(fileName->endswith(fileName,".jl"),readdir(string(@__DIR__)*"/analysis"))) do fileName
+    foreach(filter(fileName->endswith(fileName,".jl"),readdir(string(@__DIR__)*"/analysis"))) do fileName
         include((@__DIR__)*"/analysis/"*fileName)
     end
   end
@@ -54,7 +54,8 @@ module MessengerAnalyze
                         startDate::DateTime,
                         endDate::DateTime,
                         timeBucket::Type{dateType}) where dateType<:Dates.DatePeriod
-    MessengerAnalyze.Analysis.MessengerTextAnalysis.lsaMessenger(df,user1,user2,startDate,endDate,timeBucket)
+    MessengerAnalyze.Analysis.MessengerTextAnalysis.one_way_corpus(df,user1,user2,startDate,endDate,timeBucket)
+    
   end
 
 end
