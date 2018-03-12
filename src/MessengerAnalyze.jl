@@ -6,7 +6,7 @@ module MessengerAnalyze
   type Total<:PlotType end
   type DailyAverage<:PlotType end
   include((@__DIR__)*"/MessengerAnalyzeTypes.jl")
-  export Total, DailyAverage, extractFolder,dailyMessagingPlot, hourlyMessagingPlot, hoursVsWeekPlot
+  export Total, DailyAverage, extractFolder,dailyMessagingPlot, hourlyMessagingPlot, hoursVsWeekPlot, one_way_corpus, two_way_corpus
   module Utils
     foreach(filter(fileName->endswith(fileName,".jl"),readdir(string(@__DIR__)*"/utils"))) do fileName
         include((@__DIR__)*"/utils/"*fileName)
@@ -47,15 +47,6 @@ module MessengerAnalyze
                             endDate::DateTime,
                             pathToSavePlot::AbstractString)
     MessengerAnalyze.Analysis.DateAnalysis.hoursVsWeekPlot(df,user1,user2,startDate,endDate,pathToSavePlot)
-  end
-  function lsaMessenger(df::DataFrame,
-                        user1::AbstractString,
-                        user2::AbstractString,
-                        startDate::DateTime,
-                        endDate::DateTime,
-                        timeBucket::Type{dateType}) where dateType<:Dates.DatePeriod
-    MessengerAnalyze.Analysis.MessengerTextAnalysis.one_way_corpus(df,user1,user2,startDate,endDate,timeBucket)
-    
   end
 
 end
