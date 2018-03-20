@@ -14,7 +14,7 @@ module DateOperations
     function getRoundedTime(date::DateTime,timeGradation::Type{Dates.Hour})
         return DateTime(Dates.Year(date),Dates.Month(date),Dates.Week(date), Dates.Day(date), Dates.Hour(date)) 
     end
-    function getRangeOfDates(beginningTime::DateTime,endTime::DateTime,timeGradation::Type{dateType}) where dateType<:Dates.DatePeriod
+    function getRangeOfDates(beginningTime::DateTime,endTime::DateTime,timeGradation::Type{dateType}) where dateType<:Dates.Period
         dateRange=Vector{DateTime}()
         currentDate=beginningTime
         while currentDate<=endTime

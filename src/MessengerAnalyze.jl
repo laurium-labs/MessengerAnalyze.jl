@@ -29,7 +29,7 @@ module MessengerAnalyze
                         endDate::DateTime,
                         timeBucket::Type{dateType}, 
                         quantityDisplayed::Type{plotType},
-                        pathToSavePlot::AbstractString) where {dateType<:Dates.DatePeriod, plotType<:PlotType}
+                        pathToSavePlot::AbstractString) where {dateType<:Dates.Period, plotType<:PlotType}
     MessengerAnalyze.Analysis.DateAnalysis.producePlot(df,user1,user2,startDate,endDate,timeBucket,quantityDisplayed,pathToSavePlot)
   end
   function hourlyMessagingPlot(df::DataFrame,

@@ -23,7 +23,7 @@ module MessengerTextAnalysis
         to_user::AbstractString, 
         timeRange::Vector{DateTime},
         timeGradation::Type{dateType},
-        user_match::Function) where dateType<:Dates.DatePeriod
+        user_match::Function) where dateType<:Dates.Period
         documents=Vector{Union{TextAnalysis.FileDocument, TextAnalysis.NGramDocument, TextAnalysis.StringDocument, TextAnalysis.TokenDocument}}()
         user_messages=@from message in df begin
             @where user_match((from_user,to_user),get(message.senderName),get(message.sendeeName))
@@ -51,7 +51,7 @@ module MessengerTextAnalysis
         start_date::DateTime,
         end_date::DateTime,
         timeGradation::Type{dateType},
-        direction_function::Function) where dateType<:Dates.DatePeriod
+        direction_function::Function) where dateType<:Dates.Period
 
         beginningTime=MessengerAnalyze.Utils.DateOperations.getRoundedTime(start_date,timeGradation)
         endTime = MessengerAnalyze.Utils.DateOperations.getRoundedTime(end_date,timeGradation)
@@ -65,7 +65,7 @@ module MessengerTextAnalysis
                         user_name2::AbstractString,
                         start_date::DateTime,
                         end_date::DateTime,
-                        timeGradation::Type{dateType}) where dateType<:Dates.DatePeriod
+                        timeGradation::Type{dateType}) where dateType<:Dates.Period
         user1_to_user2_messages=get_corpus(df, user_name1,user_name2,start_date,end_date,timeGradation,direction_match)
     end
     function two_way_corpus(df::DataFrame,
@@ -73,7 +73,7 @@ module MessengerTextAnalysis
         user_name2::AbstractString,
         start_date::DateTime,
         end_date::DateTime,
-        timeGradation::Type{dateType}) where dateType<:Dates.DatePeriod
+        timeGradation::Type{dateType}) where dateType<:Dates.Period
         user1_to_user2_messages=get_corpus(df, user_name1,user_name2,start_date,end_date,timeGradation,participation_match)
     end
 end
