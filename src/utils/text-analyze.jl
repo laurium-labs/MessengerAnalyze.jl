@@ -18,6 +18,25 @@ module MessengerTextAnalysis
         indicies=findin(timeRange,[date])
         length(indicies)!=0?indicies[1]:-1
     end
+    function document_date_df(originalData::DataFrame,
+                        from_user::AbstractString, 
+                        to_user::AbstractString, 
+                        timeRange::Vector{DateTime},
+                        timeGradation::Type{dateType},
+                        user_match::Function) where dateType<:Dates.Period
+        user_messages=@from message in df begin
+            @where user_match((from_user,to_user),get(message.senderName),get(message.sendeeName))
+            @select {Text=get(message.messageText),Date=get(message.date)}
+            @collect DataFrame
+        end
+        length(user_messages)==0 && return ""
+        user_messages[:bucket]=map(date->bucket_date(getRoundedTime(date,timeGradation),timeRange),user_messages[:Date])
+        date_bucketed_messages = @from i in user_messages begin
+            @where get(i.bucket)>0
+            @group i.Text by i.bucket
+            @collect DataFrame
+        end    
+    end
     function document_vector(df::DataFrame, 
         from_user::AbstractString, 
         to_user::AbstractString, 
