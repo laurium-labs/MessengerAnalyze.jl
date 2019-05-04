@@ -2,6 +2,7 @@ module ParseFB
   import MessengerAnalyze
   #  using Calendar
    using EzXML, Query,DataFrames
+   using Dates
    """
    Big hack, should be fixed in Base. Considering this project.
    """
@@ -68,7 +69,7 @@ module ParseFB
        dates=map(nodecontent,filter(elem->(haskey(elem,"class")&&elem["class"]=="meta"),find(conversation|>root,"//span")))
    
        messageDescriptions=map(zip(senders,messages,dates)) do messageDescription
-           @NT(sender=messageDescription[1], message=messageDescription[2], date=messageDescription[3])
+           (sender=messageDescription[1], message=messageDescription[2], date=messageDescription[3])
        end
        foreach(messageDescriptions) do messageDescription
            if messageDescription.sender == analyzedUser
@@ -84,7 +85,7 @@ module ParseFB
        map(fieldname->fieldtype(entryType,fieldname),fieldnames(entryType))
      end
      function dataFrameFromType(::Type{entryType}) where entryType<:MessengerAnalyze.Message
-         DataFrame(fieldtypes(entryType),fieldnames(entryType),0)
+         DataFrame([fieldtypes(entryType)...],[fieldnames(entryType)...],0)
      end
    function extractFolder(pathToFolder::String)
        messageLog=dataFrameFromType(MessengerAnalyze.Message)

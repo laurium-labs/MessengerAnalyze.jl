@@ -4,19 +4,19 @@ module MessengerTextAnalysis
     using DataFrames
     using MessengerAnalyze
     using MessengerAnalyze.Utils.DateOperations: getRoundedTime, getRangeOfDates
-
+    using Dates
     export one_way_corpus, two_way_corpus
 
     function direction_match(names::Tuple{AbstractString,AbstractString},senderName,sendeeName)
-        (senderName ==names[1]&&sendeeName == names[2]) 
+        (senderName ==names[1] && sendeeName == names[2]) 
     end  
     function participation_match(names::Tuple{AbstractString,AbstractString},senderName,sendeeName)
-        (senderName ==names[1]&&sendeeName == names[2])||(senderName ==names[2]&&sendeeName == names[1])
+        (senderName ==names[1] && sendeeName == names[2]) || (senderName ==names[2] && sendeeName == names[1])
     end  
     function bucket_date(date::DateTime,timeRange::Vector{DateTime})
 
         indicies=findin(timeRange,[date])
-        length(indicies)!=0?indicies[1]:-1
+        length(indicies)!=0 ? indicies[1] : -1
     end
     function document_date_df(originalData::DataFrame,
                         from_user::AbstractString, 

@@ -3,8 +3,9 @@ module MessengerAnalyze
   function extractFile end
   function producePlot end
   abstract type PlotType end
-  type Total<:PlotType end
-  type DailyAverage<:PlotType end
+  abstract type Total<:PlotType end
+  abstract type DailyAverage<:PlotType end
+  using Dates
   include((@__DIR__)*"/MessengerAnalyzeTypes.jl")
   export Total, DailyAverage, extractFolder,dailyMessagingPlot, hourlyMessagingPlot, hoursVsWeekPlot, one_way_corpus, two_way_corpus
   module Utils

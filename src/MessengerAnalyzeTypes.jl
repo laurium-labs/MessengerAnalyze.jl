@@ -9,12 +9,12 @@
     mutable struct Message
         senderName::String
         sendeeName::String
-        year::Dates.Year
-        month::Dates.Month
-        day::Dates.Day
+        year::Year
+        month::Month
+        day::Day
         dayOfWeek::Int
-        hour::Dates.Hour
-        minute::Dates.Minute
+        hour::Hour
+        minute::Minute
         date::DateTime
         messageText::String
         multiMedia::Integer

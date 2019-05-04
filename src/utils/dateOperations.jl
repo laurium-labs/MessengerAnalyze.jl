@@ -1,20 +1,21 @@
 module DateOperations
-    function getRoundedTime(date::DateTime,timeGradation::Type{Dates.Year})
-        return DateTime(Dates.Year(date)) 
+    using Dates
+    function getRoundedTime(date::DateTime,timeGradation::Type{Year})
+        return DateTime(Year(date)) 
     end
-    function getRoundedTime(date::DateTime,timeGradation::Type{Dates.Month})
-        return DateTime(Dates.Year(date),Dates.Month(date)) 
+    function getRoundedTime(date::DateTime,timeGradation::Type{Month})
+        return DateTime(Year(date),Month(date)) 
     end
-    function getRoundedTime(date::DateTime,timeGradation::Type{Dates.Week})
-        return DateTime(Dates.Year(date),Dates.Month(date),Dates.Week(date)) 
+    function getRoundedTime(date::DateTime,timeGradation::Type{Week})
+        return DateTime(Year(date),Month(date),Week(date)) 
     end
-    function getRoundedTime(date::DateTime,timeGradation::Type{Dates.Day})
-        return DateTime(Dates.Year(date),Dates.Month(date),Dates.Week(date), Dates.Day(date)) 
+    function getRoundedTime(date::DateTime,timeGradation::Type{Day})
+        return DateTime(Year(date),Month(date),Week(date), Day(date)) 
     end 
-    function getRoundedTime(date::DateTime,timeGradation::Type{Dates.Hour})
-        return DateTime(Dates.Year(date),Dates.Month(date),Dates.Week(date), Dates.Day(date), Dates.Hour(date)) 
+    function getRoundedTime(date::DateTime,timeGradation::Type{Hour})
+        return DateTime(Year(date),Month(date),Week(date), Day(date), Hour(date)) 
     end
-    function getRangeOfDates(beginningTime::DateTime,endTime::DateTime,timeGradation::Type{dateType}) where dateType<:Dates.Period
+    function getRangeOfDates(beginningTime::DateTime,endTime::DateTime,timeGradation::Type{dateType}) where dateType<:DatePeriod
         dateRange=Vector{DateTime}()
         currentDate=beginningTime
         while currentDate<=endTime
