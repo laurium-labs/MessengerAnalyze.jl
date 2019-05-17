@@ -49,6 +49,10 @@ function aggregate_topic_weights_by_month(df::DataFrame)
     end
 end
 
+function plot_topics(θ::Matrix, corpus::Corpus;  colors_plot::Union{Vector{<:Color}, Nothing} = nothing)
+    df_monthly_aggregated_topics = aggregate_topic_weights_by_month(converastion_topic_over_time(θ, corpus))
+    plot_topics(df_monthly_aggregated_topics, colors_plot)
+end
 function plot_topics(df_monthly_aggregated_topics::DataFrame;  colors_plot::Union{Vector{<:Color}, Nothing} = nothing)
 
     topics = get_topics(df_monthly_aggregated_topics)    
