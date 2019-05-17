@@ -49,12 +49,13 @@ function aggregate_topic_weights_by_month(df::DataFrame)
     end
 end
 
-function plot_topics(df_monthly_aggregated_topics::DataFrame,  colors_plot::Vector{<:Color})
+function plot_topics(df_monthly_aggregated_topics::DataFrame;  colors_plot::Union{Vector{<:Color}, Nothing} = nothing)
+
     topics = get_topics(df_monthly_aggregated_topics)    
-    plots = map(1:length(topics)) do idx
+    colors_plot = colors_plot == nothing ? distinguishable_colors(length(topics)) : colors_plot
+    map(1:length(topics)) do idx
         plot(x=df_monthly_aggregated_topics[:month],y=df_monthly_aggregated_topics[topics[idx]],Guide.xlabel(""),Guide.ylabel("average content weight of $(string(topics[idx]))"),color=repeat(["$(string(topics[idx]))"]), Scale.color_discrete_manual(colors_plot[idx]))
     end
-    plots
 end
 function build_lda(corpus::Corpus, number_of_topics::Integer; number_iterations::Integer=10000)
     update_lexicon!(corpus)
