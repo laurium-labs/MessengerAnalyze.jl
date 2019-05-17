@@ -13,9 +13,9 @@ module DateOperations
         return DateTime(Year(date),Month(date),Week(date), Day(date)) 
     end 
     function getRoundedTime(date::DateTime,timeGradation::Type{Hour})
-        return DateTime(Year(date),Month(date),Week(date), Day(date), Hour(date)) 
+        return DateTime(Year(date),Month(date), Day(date), Hour(date)) 
     end
-    function getRangeOfDates(beginningTime::DateTime,endTime::DateTime,timeGradation::Type{dateType}) where dateType<:DatePeriod
+    function getRangeOfDates(beginningTime::DateTime,endTime::DateTime,timeGradation::Type{dateType}) where dateType<:Period
         dateRange=Vector{DateTime}()
         currentDate=beginningTime
         while currentDate<=endTime

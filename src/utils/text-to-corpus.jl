@@ -1,4 +1,4 @@
-module MessengerTextAnalysis    
+module MessengerTextParsing  
     using TextAnalysis
     using Query
     using DataFrames
@@ -15,7 +15,7 @@ module MessengerTextAnalysis
     end  
     function bucket_date(date::DateTime,timeRange::Vector{DateTime})
 
-        indicies=findin(timeRange,[date])
+        indicies=findall(in([date]),timeRange)
         length(indicies)!=0 ? indicies[1] : -1
     end
     function document_date_df(originalData::DataFrame,
@@ -26,13 +26,13 @@ module MessengerTextAnalysis
                         user_match::Function) where dateType<:Dates.Period
         user_messages=@from message in df begin
             @where user_match((from_user,to_user),get(message.senderName),get(message.sendeeName))
-            @select {Text=get(message.messageText),Date=get(message.date)}
+            @select {Text=message.messageText,Date=message.date}
             @collect DataFrame
         end
         length(user_messages)==0 && return ""
         user_messages[:bucket]=map(date->bucket_date(getRoundedTime(date,timeGradation),timeRange),user_messages[:Date])
         date_bucketed_messages = @from i in user_messages begin
-            @where get(i.bucket)>0
+            @where i.bucket>0
             @group i.Text by i.bucket
             @collect DataFrame
         end    
@@ -45,22 +45,31 @@ module MessengerTextAnalysis
         user_match::Function) where dateType<:Dates.Period
         documents=Vector{Union{TextAnalysis.FileDocument, TextAnalysis.NGramDocument, TextAnalysis.StringDocument, TextAnalysis.TokenDocument}}()
         user_messages=@from message in df begin
-            @where user_match((from_user,to_user),get(message.senderName),get(message.sendeeName))
-            @select {Text=get(message.messageText),Date=get(message.date)}
+            @where user_match((from_user,to_user),message.senderName,message.sendeeName)
+            @select {Text=message.messageText,Date=message.date}
             @collect DataFrame
         end
         length(user_messages)==0 && return ""
         user_messages[:bucket]=map(date->bucket_date(getRoundedTime(date,timeGradation),timeRange),user_messages[:Date])
         
         date_bucketed_messages = @from i in user_messages begin
-            @where get(i.bucket)>0
-            @group i.Text by i.bucket
+            @where i.bucket>0
+            @group i by i.bucket
             @collect 
         end
         foreach(date_bucketed_messages) do bucket_message
-            string_messages=mapreduce(String,(l,r)->l*" "*r,bucket_message)
+            string_messages=mapreduce(el->String(el[:Text]),(l,r)->l*" "*r,bucket_message)
             length(string_messages)==0 && return
-            push!(documents,StringDocument(string_messages))
+            meta_data = TextAnalysis.DocumentMetadata(
+                    TextAnalysis.Languages.English(),
+                    "Untitled Document",
+                    "$from_user and $to_user",
+                    string(bucket_message[1][:Date])
+                )
+
+            string_document = StringDocument(string_messages, meta_data)
+
+            push!(documents, string_document)
         end
         return documents
     end
@@ -76,7 +85,20 @@ module MessengerTextAnalysis
         endTime = MessengerAnalyze.Utils.DateOperations.getRoundedTime(end_date,timeGradation)
         timeRange = MessengerAnalyze.Utils.DateOperations.getRangeOfDates(beginningTime,endTime,timeGradation)
         documents=document_vector(df,from_user,to_user,timeRange,timeGradation,direction_function)
-        return Corpus(documents)
+        corpus =  Corpus(documents)
+        remove_case!(corpus)
+        stem!(corpus)
+        prepare!(corpus, strip_articles)
+        prepare!(corpus, strip_pronouns)
+        prepare!(corpus, strip_punctuation)
+        prepare!(corpus, strip_prepositions)
+        prepare!(corpus,  strip_numbers)
+        prepare!(corpus, strip_stopwords)
+        prepare!(corpus, strip_non_letters)
+        laughing = map(idx_total->mapreduce(idx_build ->"ha", (l,r) ->l*r ,1:idx_total,init=""),1:6)
+        remove_words!(corpus, append!(["/", "ll","i", "lol", "com", "www", "html", "http", "https", "org"],laughing))
+        
+        return corpus
     end
 
     function one_way_corpus(df::DataFrame,
