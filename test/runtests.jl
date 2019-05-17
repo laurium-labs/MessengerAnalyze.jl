@@ -26,7 +26,7 @@ topic_top_words(ϕ, corpus_dtm, 10)
 conversation_weight = converastion_topic_over_time(θ, corpus)
 aggregated_data = aggregate_topic_weights_by_month(conversation_weight) 
 colors_plot = [colorant"#e6194B", colorant"#3cb44b",colorant"#ffe119",colorant"#4363d8",colorant"#f58231", colorant"#911eb4", colorant"#42d4f4", colorant"#f032e6" ]
-plots =plot_topics(aggregated_data, colors_plot)
+plots = plot_topics(aggregated_data, colors_plot = colors_plot)
 mktempdir() do dir 
     save_svg_plot(plots[1], joinpath(dir,"example.svg"))
 end
