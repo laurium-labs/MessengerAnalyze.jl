@@ -6,12 +6,7 @@ Takes conversations between two people and produces a plots. Daily messages per 
 Download your Facebook archive. This is detailed at the following link. Choose the JSON download option.
 https://www.facebook.com/help/131112897028467
 Uncompress the archive in a specifically created folder.
-Install julia, then run in julia the following commands 
-```
-using Pkg
-Pkg.add("https://github.com/bhalonen/MessengerAnalyze.jl.git")
-```
-or enter package mode by typeing `]` then 
+Install julia, then enter package mode by typeing `]` then 
 ```
 pkg> add https://github.com/bhalonen/MessengerAnalyze.jl
 ```
